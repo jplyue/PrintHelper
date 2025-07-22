@@ -1,0 +1,98 @@
+.container {
+  background-color: #ddd;
+  padding: 30rpx;
+  min-height: 100vh;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: 30rpx;
+}
+
+.label {
+  width: 180rpx;
+  font-size: 32rpx;
+}
+
+.label-price {
+  font-size: 30rpx;
+}
+
+.input {
+  flex: 1;
+  height: 60rpx;
+  background-color: #fff;
+  padding: 0 20rpx;
+  border-radius: 8rpx;
+}
+
+.textarea {
+  flex: 1;
+  height: 180rpx;
+  background-color: #fff;
+  padding: 20rpx;
+  border-radius: 8rpx;
+}
+
+.section-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  margin: 40rpx 0 20rpx;
+}
+
+.input-group {
+  flex-direction: row;
+  justify-content: space-between;
+}
+.input-group .label {
+  display: block;
+  margin-bottom: 10rpx;
+  width: auto;
+}
+
+.result-block {
+  margin-top: 40rpx;
+  padding: 20rpx;
+  background-color: #fff;
+  border-radius: 8rpx;
+  font-size: 30rpx;
+  line-height: 2;
+}
+
+/*table*/
+.table {
+  border: 1px solid #ccc;
+  border-collapse: collapse;
+  margin-top: 20rpx;
+  overflow-x: auto;
+  display: block;
+  white-space: nowrap;
+}
+
+.table-row {
+  display: table-row;
+  border-bottom: 1px solid #ccc;
+}
+
+.table-cell {
+  border-right: 1px solid #ccc;
+  text-align: center;
+  font-size: 28rpx;
+  padding: 10rpx;
+  min-width: 150rpx; /* 或更大的数值，根据实际需要调整 */
+  box-sizing: border-box;
+  display: table-cell;
+}
+
+.table-header {
+  font-weight: bold;
+  background-color: #f2f2f2;
+  display: table-row;
+}
+
+.table-row,
+.table-header {
+  min-width: max-content;
+}
