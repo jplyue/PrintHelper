@@ -38,6 +38,47 @@
           />
         </view>
       </view>
+      <view class="form-item input-group">
+        <view style="flex: 1">
+          <text class="label">大规纸张单价：</text>
+          <input
+            class="input"
+            v-model="formData.bigPaperPrice"
+            placeholder="请输入大规纸张价格"
+          />
+        </view>
+        <view style="flex: 1; margin-left: 30rpx">
+          <text class="label">标规纸张单价：</text>
+          <input
+            class="input"
+            v-model="formData.standardPaperPrice"
+            placeholder="请输入标规纸张价格"
+          />
+        </view>
+      </view>
+
+      <view class="form-item">
+        <text class="label">运费：</text>
+        {{ formData.shippingFee }}
+      </view>
+
+      <view class="form-item">
+        <text class="label">人工：</text>
+        <input
+          class="input"
+          v-model="formData.labourCost"
+          placeholder="请输入人工费用"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="label">打样：</text>
+        <input
+          class="input"
+          v-model="formData.exampleFee"
+          placeholder="请输入打样费用"
+        />
+      </view>
 
       <view class="section-title">用户设定</view>
       <view class="form-item">
@@ -84,7 +125,7 @@
           placeholder="请输入出血尺寸"
         />
       </view>
-      <view class="form-item">
+      <!-- <view class="form-item">
         <text class="label">起步价：</text>
         <view>
           <span class="label-price">{{ formData.beginPrice }}</span>
@@ -95,66 +136,7 @@
         <view>
           <span class="label-price">{{ formData.singlePrice }}</span>
         </view>
-      </view>
-      <!-- <view class="form-item">
-        <text class="label">纸张数量：</text>
-        <input
-          class="input"
-          v-model="formData.numberOfSheets"
-          placeholder="请输入纸张数量"
-        />
       </view> -->
-
-      <!-- <view class="form-item">
-        <text class="label">纸张开数：</text>
-        <input
-          class="input"
-          v-model="formData.impositionSize"
-          placeholder="请输入纸张开数"
-        />
-      </view> -->
-
-      <view class="form-item input-group">
-        <view style="flex: 1">
-          <text class="label">大规纸张单价：</text>
-          <input
-            class="input"
-            v-model="formData.bigPaperPrice"
-            placeholder="请输入大规纸张价格"
-          />
-        </view>
-        <view style="flex: 1; margin-left: 30rpx">
-          <text class="label">标规纸张单价：</text>
-          <input
-            class="input"
-            v-model="formData.standardPaperPrice"
-            placeholder="请输入标规纸张价格"
-          />
-        </view>
-      </view>
-
-      <view class="form-item">
-        <text class="label">运费：</text>
-        {{ formData.shippingFee }}
-      </view>
-
-      <view class="form-item">
-        <text class="label">人工：</text>
-        <input
-          class="input"
-          v-model="formData.labourCost"
-          placeholder="请输入人工费用"
-        />
-      </view>
-
-      <view class="form-item">
-        <text class="label">打样：</text>
-        <input
-          class="input"
-          v-model="formData.exampleFee"
-          placeholder="请输入打样费用"
-        />
-      </view>
 
       <view class="form-item">
         <text class="label">备注：</text>
@@ -183,10 +165,11 @@
         </view>
 
         <view>
-          <view class="form-item section-title">52机大规纸张结果</view>
+          <view class="form-item section-title">综合纸张结果</view>
           <view class="table">
             <view class="table-header table-row">
               <view class="table-cell">序号</view>
+              <view class="table-cell">纸张类型</view>
               <view class="table-cell">开数</view>
               <view class="table-cell">拼数</view>
               <view class="table-cell">小张纸数量</view>
@@ -198,62 +181,11 @@
             </view>
             <view
               class="table-row"
-              v-for="(option, index) in sortedResultOptions.filter(o =>
-                o.machineType.includes('52机大规纸张')
-              )"
-              :key="'big-' + index"
+              v-for="(option, index) in sortedMergedResults"
+              :key="'combined-' + index"
             >
               <view class="table-cell">{{ index + 1 }}</view>
-              <view class="table-cell">{{ option.kai }}</view>
-              <view class="table-cell">{{ option.bestCount }}</view>
-              <view class="table-cell">
-                {{ Math.ceil(formData.productCount / option.bestCount) }}
-              </view>
-              <view class="table-cell">
-                {{
-                  Math.ceil(
-                    Math.ceil(formData.productCount / option.bestCount) /
-                      parseInt(option.kai)
-                  )
-                }}
-              </view>
-
-              <view class="table-cell">{{ option.layoutType || "" }}</view>
-              <view class="table-cell"
-                >{{ option.remainingHeight }}x{{ option.remainingWidth }}</view
-              >
-              <view class="table-cell">
-                {{ option.printCost?.toFixed(2) }}
-              </view>
-              <view class="table-cell">
-                {{ option.productionCost }}
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <view>
-          <view class="form-item section-title">52机标规纸张结果</view>
-          <view class="table">
-            <view class="table-header table-row">
-              <view class="table-cell">序号</view>
-              <view class="table-cell">开数</view>
-              <view class="table-cell">拼数</view>
-              <view class="table-cell">小张纸数量</view>
-              <view class="table-cell">全开纸数量</view>
-              <view class="table-cell">排版方向</view>
-              <view class="table-cell">剩余长x宽</view>
-              <view class="table-cell">纸张价格</view>
-              <view class="table-cell">价格</view>
-            </view>
-            <view
-              class="table-row"
-              v-for="(option, index) in sortedResultOptions.filter(o =>
-                o.machineType.includes('52机标规纸张')
-              )"
-              :key="'standard-' + index"
-            >
-              <view class="table-cell">{{ index + 1 }}</view>
+              <view class="table-cell">{{ option.machineType }}</view>
               <view class="table-cell">{{ option.kai }}</view>
               <view class="table-cell">{{ option.bestCount }}</view>
               <view class="table-cell">
@@ -271,12 +203,8 @@
               <view class="table-cell"
                 >{{ option.remainingHeight }}x{{ option.remainingWidth }}</view
               >
-              <view class="table-cell">
-                {{ option.printCost?.toFixed(2) }}
-              </view>
-              <view class="table-cell">
-                {{ option.productionCost }}
-              </view>
+              <view class="table-cell">{{ option.printCost?.toFixed(2) }}</view>
+              <view class="table-cell">{{ option.productionCost }}</view>
             </view>
           </view>
         </view>
@@ -500,6 +428,16 @@ const sortedResultOptions = computed(() => {
     const aVal = numericLabel(a.bestSheet);
     const bVal = numericLabel(b.bestSheet);
     return aVal - bVal;
+  });
+});
+
+const sortedMergedResults = computed(() => {
+  const numericLabel = label => (/^\d+开$/.test(label) ? parseInt(label) : 999);
+  return [...formData.resultOptions].sort((a, b) => {
+    if (a.machineType !== b.machineType) {
+      return a.machineType.includes("大规") ? -1 : 1;
+    }
+    return numericLabel(a.kai) - numericLabel(b.kai);
   });
 });
 </script>
