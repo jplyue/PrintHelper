@@ -101,90 +101,104 @@ export function calculateBestImposition(
       const sheetFactor = parseInt(label); // 5开 → 5
       for (let idx = 0; idx < printSizes.length; idx++) {
         const [pw, ph] = printSizes[idx];
-        // 计算三种排版方式：横向、纵向、横纵混合
-        // 横向排布（横x竖）
-        let countH = Math.floor(pw / bleedWidth) * Math.floor(ph / bleedHeight);
-        let remainingWidthH = pw % bleedWidth;
-        let remainingHeightH = ph % bleedHeight;
-        if (remainingWidthH >= bleedWidth || remainingHeightH >= bleedHeight) {
-          countH += 1;
+        let bestOption = null;
+
+        const tryOrientations = [
+          { pw: pw, ph: ph, rotated: false },
+          { pw: ph, ph: pw, rotated: true }
+        ];
+
+        for (const { pw: currPw, ph: currPh, rotated } of tryOrientations) {
+          // 横向排布
+          let countHMain =
+            Math.floor(currPw / bleedWidth) * Math.floor(currPh / bleedHeight);
+          let remainW_H = currPw % bleedWidth;
+          let extraH =
+            Math.floor(remainW_H / bleedHeight) *
+            Math.floor(currPh / bleedWidth);
+          let countH = countHMain + extraH;
+
+          // 纵向排布
+          let countVMain =
+            Math.floor(currPw / bleedHeight) * Math.floor(currPh / bleedWidth);
+          let remainW_V = currPw % bleedHeight;
+          let extraV =
+            Math.floor(remainW_V / bleedWidth) *
+            Math.floor(currPh / bleedHeight);
+          let countV = countVMain + extraV;
+
+          // 横纵混合排布
+          let countMix = 0;
+          const colsH = Math.floor(currPw / bleedWidth);
+          const rowsH = Math.floor(currPh / bleedHeight);
+          const usedHeightH = rowsH * bleedHeight;
+          const remainingHeight = currPh - usedHeightH;
+          countMix = colsH * rowsH;
+          const extraRows = Math.floor(remainingHeight / bleedWidth);
+          const extraCols = Math.floor(currPw / bleedHeight);
+          if (extraRows > 0 && extraCols > 0) {
+            countMix += extraRows * extraCols;
+          }
+
+          const maxCount = Math.max(countH, countV, countMix);
+          if (maxCount === 0) continue;
+
+          const blankArea =
+            currPw * currPh - bleedWidth * bleedHeight * maxCount;
+          const totalCountPerOriginalSheet = maxCount * sheetFactor;
+          const requiredSheets = Math.ceil(
+            productTotalCount / totalCountPerOriginalSheet
+          );
+          const fullSheetCount = Math.ceil(requiredSheets / sheetFactor);
+
+          const unitPrice =
+            group.name === "52机大规纸张" ? bigPaperPrice : standardPaperPrice;
+          const printCost = fullSheetCount * unitPrice;
+
+          let remainingW = 0;
+          let remainingH = 0;
+          let layoutType = "";
+
+          if (maxCount === countH) {
+            remainingW = currPw % bleedWidth;
+            remainingH = currPh % bleedHeight;
+            layoutType = rotated ? "横向排布（旋转）" : "横向排布（原始）";
+          } else if (maxCount === countV) {
+            remainingW = currPw % bleedHeight;
+            remainingH = currPh % bleedWidth;
+            layoutType = rotated ? "纵向排布（旋转）" : "纵向排布（原始）";
+          } else {
+            remainingW = currPw % bleedWidth;
+            remainingH = remainingHeight;
+            layoutType = rotated
+              ? "横纵混合排布（旋转）"
+              : "横纵混合排布（原始）";
+          }
+
+          const candidateOption = {
+            kai: label,
+            bestCount: maxCount,
+            bestSheet: sheetSizes[idx] || sheetSizes[0],
+            machineType: `${group.name} ${label}`,
+            requiredSheets,
+            fullSheetCount,
+            blankArea,
+            countPerSheet: totalCountPerOriginalSheet,
+            printCost,
+            paperPrice: unitPrice,
+            remainingWidth: remainingW,
+            remainingHeight: remainingH,
+            layoutType
+          };
+
+          if (!bestOption || candidateOption.bestCount > bestOption.bestCount) {
+            bestOption = candidateOption;
+          }
         }
 
-        // 纵向排布（竖x横）
-        let countV = Math.floor(pw / bleedHeight) * Math.floor(ph / bleedWidth);
-        let remainingWidthV = pw % bleedHeight;
-        let remainingHeightV = ph % bleedWidth;
-        if (remainingWidthV >= bleedHeight || remainingHeightV >= bleedWidth) {
-          countV += 1;
+        if (bestOption) {
+          options.push(bestOption);
         }
-
-        // 横纵混合（横+竖），例如：先按 bleedWidth 排，再用余下空间排 bleedHeight
-        let countMix = 0;
-        const colsH = Math.floor(pw / bleedWidth);
-        const rowsH = Math.floor(ph / bleedHeight);
-        const usedHeightH = rowsH * bleedHeight;
-        const remainingHeight = ph - usedHeightH;
-        countMix = colsH * rowsH;
-        const extraRows = Math.floor(remainingHeight / bleedWidth);
-        const extraCols = Math.floor(pw / bleedHeight);
-        if (extraRows > 0 && extraCols > 0) {
-          countMix += extraRows * extraCols;
-        } else if (
-          (pw - colsH * bleedWidth >= bleedHeight && ph >= bleedWidth) ||
-          (ph - rowsH * bleedHeight >= bleedWidth && pw >= bleedHeight)
-        ) {
-          countMix += 1;
-        }
-
-        const maxCount = Math.max(countH, countV, countMix);
-
-        if (maxCount === 0) continue;
-
-        const blankArea = pw * ph - bleedWidth * bleedHeight * maxCount;
-        const totalCountPerOriginalSheet = maxCount * sheetFactor;
-        const requiredSheets = Math.ceil(
-          productTotalCount / totalCountPerOriginalSheet
-        );
-        const fullSheetCount = Math.ceil(requiredSheets / sheetFactor);
-
-        const unitPrice =
-          group.name === "52机大规纸张" ? bigPaperPrice : standardPaperPrice;
-
-        const printCost = fullSheetCount * unitPrice;
-
-        // 计算剩余宽高
-        let remainingW = 0;
-        let remainingH = 0;
-        let layoutType = "";
-        if (maxCount === countH) {
-          remainingW = pw % bleedWidth;
-          remainingH = ph % bleedHeight;
-          layoutType = "横向排布";
-        } else if (maxCount === countV) {
-          remainingW = pw % bleedHeight;
-          remainingH = ph % bleedWidth;
-          layoutType = "纵向排布";
-        } else {
-          remainingW = pw % bleedWidth;
-          remainingH = remainingHeight;
-          layoutType = "横纵混合排布";
-        }
-
-        options.push({
-          kai: label,
-          bestCount: maxCount,
-          bestSheet: sheetSizes[idx] || sheetSizes[0],
-          machineType: `${group.name} ${label}`,
-          requiredSheets,
-          fullSheetCount,
-          blankArea,
-          countPerSheet: totalCountPerOriginalSheet,
-          printCost,
-          paperPrice: unitPrice,
-          remainingWidth: remainingW,
-          remainingHeight: remainingH,
-          layoutType
-        });
       }
     }
   }
