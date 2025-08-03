@@ -294,8 +294,20 @@ const onColorChange = e => {
   }
 };
 
+/**
+ * 计算生产成本
+ * @param {Object} params
+ * @param {number} productCount - 最终成品数量（非纸张数量）
+ * @param {number} beginPrice
+ * @param {number} singlePrice
+ * @param {number} impositionSize
+ * @param {number} paperPrice
+ * @param {number} shippingFee
+ * @param {number} labourCost
+ * @param {number} exampleFee
+ */
 function calculateProductionCost({
-  productCount,
+  productCount, // 最终成品数量（非纸张数量）
   beginPrice,
   singlePrice,
   impositionSize,
@@ -343,7 +355,7 @@ const handleSubmit = () => {
     const countPerFullSheet = opt.bestCount * parseInt(opt.kai);
     const numberOfSheets = Math.ceil(productCount / countPerFullSheet);
     const productionCost = calculateProductionCost({
-      productCount: numberOfSheets,
+      productCount: productCount,
       beginPrice: Number(formData.beginPrice),
       singlePrice: Number(formData.singlePrice),
       impositionSize: parseInt(opt.kai),
@@ -422,22 +434,22 @@ function getE(n) {
   return 0; // 超过范围默认值
 }
 
-const sortedResultOptions = computed(() => {
-  const numericLabel = label => (/^\d+开$/.test(label) ? parseInt(label) : 999);
-  return [...formData.resultOptions].sort((a, b) => {
-    const aVal = numericLabel(a.bestSheet);
-    const bVal = numericLabel(b.bestSheet);
-    return aVal - bVal;
-  });
-});
-
 const sortedMergedResults = computed(() => {
-  const numericLabel = label => (/^\d+开$/.test(label) ? parseInt(label) : 999);
   return [...formData.resultOptions].sort((a, b) => {
-    if (a.machineType !== b.machineType) {
-      return a.machineType.includes("大规") ? -1 : 1;
+    const getKaiValue = val => {
+      const num = parseInt(val);
+      return isNaN(num) ? 0 : num;
+    };
+
+    // 先按 machineType 分组排序
+    const typeA = a.machineType.includes("大规") ? 0 : 1;
+    const typeB = b.machineType.includes("大规") ? 0 : 1;
+    if (typeA !== typeB) {
+      return typeA - typeB;
     }
-    return numericLabel(a.kai) - numericLabel(b.kai);
+
+    // 同一类型下按开数从大到小排序
+    return getKaiValue(a.kai) - getKaiValue(b.kai);
   });
 });
 </script>
